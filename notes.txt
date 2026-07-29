@@ -1,0 +1,16 @@
+Re-check royal flush: found possible problem with it ending too early
+Look over print current hand: old test case for error when assigning player num (can probably delete)
+Shuffle deck: does not work and random seed it not random
+Look into "std::" and its necesseity
+Look into cout "endl" and if its necessary / what it does
+
+Check full house for possible 4 of a kind showing up as full house
+ - first card in set of 3 is not set to 99
+ - EDIT: Full House is changed to store the index rank in which the initial 3 pair is found and not use it for the two pair
+ re-testing is necessary
+
+Straight might be faster to just accept duplicates instead of removing them
+ - look into running time of dup removal algo
+
+For two pair we just remove the first pair cards
+May be faster for full house if we remove the three pair cards?
