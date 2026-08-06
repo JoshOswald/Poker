@@ -1,7 +1,7 @@
 Re-check royal flush: found possible problem with it ending too early
 Look over print current hand: old test case for error when assigning player num (can probably delete)
 Shuffle deck: does not work and random seed it not random
-Look into "std::" and its necesseity
+Look into "std::" and its necesseity (not necessary but should be added)
 Look into cout "endl" and if its necessary / what it does
 
 Check full house for possible 4 of a kind showing up as full house

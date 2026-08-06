@@ -264,9 +264,32 @@ bool straight(vector<array<string, 2>> cards){
         return false;
     }
 
+    int start;
+
     for(int i = 0; i < len; i++){
+
+        start = i;
+
         int current = cardsArray[i] + 1;
-        //If current index makes it impossible to have a straight return false
+        if(current == 15){
+            current = 2;
+            start = 0;
+
+        }
+        for(int j = start; j < len; j++){
+            if(i != j && current == cardsArray[j]){
+                current = current + 1;
+            }
+        }
+
+        //If we have five cards in sequence return true
+        if(cardsArray[i] + 5 == current){
+            return true;
+        }else if(current == 6 && cardsArray[i] == 14){
+            return true;
+        }
+
+        /*
         if(i != len-4){
            for(int j = i; j < len; j++){
                 if(i != j && current == cardsArray[j]){
@@ -278,9 +301,23 @@ bool straight(vector<array<string, 2>> cards){
             if(cardsArray[i] + 5 == current){
                 return true;
             }
+        }else if(current == 15){
+            cout << "hi" << endl;
+            current = 1;
+            for(int j = 0; j < len; j++){
+                if(i != j && current == cardsArray[j]){
+                    current = current + 1;
+                }
+            }
+
+            //If we have five cards in sequence return true
+            if(5 == current){
+                return true;
+            }
         }else{
             return false;
         }
+        */
     }
 
     return false;
@@ -330,8 +367,8 @@ bool twoPair(vector<array<string, 2>> cards){
             if(i != j && cards[i][1] == cards[j][1]){
                 //If a pair is found, remove from the vector
                 //Then go to next section of code
-                cards.erase(cards.begin() + i);
                 cards.erase(cards.begin() + j);
+                cards.erase(cards.begin() + i);
                 goto findSecondPair;
             }
         }
@@ -343,6 +380,7 @@ findSecondPair:
 
     //Check each item and see if it has another pair besides the first one
     //Iterate on next point forward and not entire vector
+    len = cards.size();
     for(int i = 0; i < len; i++){
         for(int j = i; j < len; j++){
             if(i != j && cards[i][1] == cards[j][1]){
@@ -386,12 +424,12 @@ void merge(vector<array<string, 2>>& cards, int p, int q, int r){
         R[j] = cards[q + 1 + j];
     }
 
-    L.push_back({"", "inf"}); // Sentinel for L
-    R.push_back({"", "inf"}); // Sentinel for R
+    L.push_back({"", "99"}); // Sentinel for L
+    R.push_back({"", "99"}); // Sentinel for R
 
     int i = 0, j = 0;
     for (int k = p; k <= r; k++) {
-        if (L[i][1] <= R[j][1]) {
+        if (stoi(L[i][1]) <= stoi(R[j][1])) {
             cards[k] = L[i];
             i++;
         } else {

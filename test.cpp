@@ -32,21 +32,25 @@ bool checkRoyalFlush();
 
 void checkATonOfHands();
 
+void checkRandom();
+
 int main() {
-    vector<array<string, 2>> cards = createDeck();
-    printDeck(cards);
+    //vector<array<string, 2>> cards = createDeck();
+    //printDeck(cards);
 
     //checkOnePair();
     //checkTwoPair();
     //checkThreeOAKind();
     //checkFourOAKind();
     //checkFlush();
-    //checkStraight();
+    checkStraight();
     //checkFullHouse();
     //checkStraightFlush();
     //checkRoyalFlush();
 
-    checkATonOfHands();
+    //checkATonOfHands();
+
+    //checkRandom();
 
 
     return 0;
@@ -426,6 +430,14 @@ bool checkStraight(){
         cout << "Mixed: "<< RED << "Failed" << RESET << "\n";
     }
 
+    //mixed
+    deck = {{"H","2"},{"H","1"},{"H","14"},{"H","4"},{"H","8"},{"H","9"},{"H","3"}};
+    if(straight(deck)){
+        cout << "Ace Low: "<< GREEN << "Passed" << RESET << "\n";
+    }else{
+        cout << "Ace Low: "<< RED << "Failed" << RESET << "\n";
+    }
+
     return false;
 }
 
@@ -642,8 +654,20 @@ bool checkSetupPlayers(){
     string answer;
     bool autoSetup = true;
 
+    default_random_engine eng;
+    unsigned long int t = chrono::high_resolution_clock::now().time_since_epoch().count();
+    eng.seed(t);
+
+    mt19937 rng(eng());
+
+    // 1. Obtain a random seed from the hardware
+    std::random_device rd;
+
+    // 2. Initialize the pseudo-random number generator (Twister) with the seed
+    std::mt19937 g(rd());
+
     //intro();
-    shuffleDeck(deck);
+    shuffleDeck(deck, g);
 
     //Debug print deck and # of cards
     printDeck(deck);
@@ -680,16 +704,31 @@ void checkATonOfHands(){
     int onePair = 0;
     int pig = 0;
 
-    int numberOfRuns = 2;
+    int numberOfRuns = 100000;
 
-    for(int i = 0; i <= numberOfRuns; i++){
+    default_random_engine eng;
+    unsigned long int t = chrono::high_resolution_clock::now().time_since_epoch().count();
+    eng.seed(t);
+
+    mt19937 rng(eng());
+
+    // 1. Obtain a random seed from the hardware
+    std::random_device rd;
+
+    // 2. Initialize the pseudo-random number generator (Twister) with the seed
+    std::mt19937 g(rd());
+
+    for(int i = 0; i < numberOfRuns; i++){
+        temp = 0;
         deck = createDeck();
+        shuffleDeck(deck, g);
         players = setupPlayers(playerNames);
         deal(deck,players);
         board = setupBoard(deck);
-        temp = checkHand(players[3],board);
+        temp = checkHand(players[0],board);
 
-        printCurrentHand(players,numPlayers);
+        //printCurrentHand(players,numPlayers);
+        //printCurrentHand(players,1);
 
         if(temp == 9){
             royalFlush++;
@@ -736,4 +775,18 @@ void checkATonOfHands(){
     cout << (onePair / numberOfRuns) * 100 << "\n\n";
     cout << "Pig: " << pig << "\n";
     cout << (pig / numberOfRuns) * 100 << "\n\n";
+}
+
+void checkRandom(){
+
+    std::random_device dev;
+    std::mt19937 rng(dev());
+
+    for(int i = 0; i < 10; i++){
+        std::uniform_int_distribution<std::mt19937::result_type> dist6(1,6); // distribution in range [1, 6]
+
+        std::cout << dist6(rng) << std::endl;
+    }
+
+
 }

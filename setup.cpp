@@ -14,7 +14,7 @@ using namespace std;
 vector<array<string, 2>> createDeck();
 vector<Player> setupPlayers(vector<string> playerNames);
 void printDeck(vector<array<string, 2>> deck);
-void shuffleDeck(vector<array<string, 2>>& deck);
+void shuffleDeck(vector<array<string, 2>>& deck, std::mt19937& seed);
 void intro();
 void deal(vector<array<string, 2>> deck, vector<Player>& players);
 void printCurrentHand(vector<Player> players, int numPlayers);
@@ -75,6 +75,10 @@ void deal(vector<array<string, 2>> deck, vector<Player>& players){
     int numPlayers = players.size();
     for(int i = 0; i < 2; i++){
         for(int j = 0; j < numPlayers; j++){
+            if(i == 0){
+                players[j].hand.clear();
+            }
+
             players[j].hand.push_back(deck[0]);
             deck.erase(deck.begin());
         }
@@ -103,26 +107,20 @@ void printDeck(vector<array<string, 2>> deck){
 //Look over when running***
 void printCurrentHand(vector<Player> players, int numPlayers){
     for(int i = 0; i < numPlayers; i++){
-        if(players[i].playerNum == 1876031856){
-            cout << "test";
+        if(!players[i].hand.empty()){
+            cout << "Player No: " << players[i].playerNum << "\n" <<"Player Cards: " << "\n"; 
+            cout << players[i].hand[0][0] << " " << players[i].hand[0][1] << "\n";
+            cout << players[i].hand[1][0] << " " << players[i].hand[1][1] << "\n";
+        }else{
+            cout << "Player No: " << players[i].playerNum << "\n" <<"Players hand is empty " << "\n"; 
         }
-        cout << "Player No: " << players[i].playerNum << "\n" <<"Player Cards: " << "\n"; 
-        cout << players[i].hand[0][0] << " " << players[i].hand[0][1] << "\n";
-        cout << players[i].hand[1][0] << " " << players[i].hand[1][1] << "\n";
     }
 }
 
 //Takes newly created deck of cards and shuffles them
 //DOES NOT WORK, need to edit or change random seed generation again
-void shuffleDeck(vector<array<string, 2>>& deck){
-
-    default_random_engine eng;
-    unsigned long int t = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-    eng.seed(t);
-
-    std::mt19937 rng(eng());
-
-    std::shuffle(std::begin(deck), std::end(deck), rng);
+void shuffleDeck(vector<array<string, 2>>& deck, std::mt19937& seed){
+    std::shuffle(begin(deck), end(deck), seed);
 }
 
 
