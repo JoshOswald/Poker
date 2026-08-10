@@ -10,8 +10,10 @@
 
 using namespace std;
 
-void check(int numPlayers, vector<array<string, 2>> board, vector<Player> players);
-int checkHand(Player playerH, vector<array<string, 2>> board);
+std::vector<int> check(vector<array<string, 2>>& board, vector<Player>& players);
+int checkHand(vector<array<string, 2>> cards);
+int findHighest(vector<std::array<string, 2>>& board, Player& players);
+std::array<string, 2> highCard(std::vector<std::array<string, 2>>& cards, std::vector<std::array<string, 2>>& board,int& deg);
 
 bool royalFlush(vector<array<string, 2>> cards);
 bool straightFlush(vector<array<string, 2>> cards);
@@ -27,18 +29,322 @@ void merge(vector<array<string, 2>>& cards, int p, int q, int r);
 void merge_sort_aux(vector<array<string, 2>>& cards, int p, int r);
 void merge_sort(vector<array<string, 2>>& cards);
 
-void check(int numPlayers, vector<std::array<string, 2>> board, vector<Player> players){
+/**
+ * @brief Takes player objects and determines hand degree and winner.
+ * 
+ * Detailed description: This function will check all player hands stored in players.
+ * Then assign player or players with winning hand as winner.
+ * 
+ * @param board The cards every player has access too, to create their hand.
+ * @param players The player objects stored in a vector.
+ */
+std::vector<int> check(std::vector<std::array<string, 2>>& board, vector<Player>& players){
+    int numPlayers = players.size();
+    int highest = 0;
+    std::vector<int> winner = {0};
+    std::vector<std::array<std::string, 2>> cards;
     for(int i = 0; i < numPlayers; i++){
-        checkHand(players[i], board);
+        if(i != 0 && !players[i].fold){
+            cards = board;
+            cards.push_back(players[i].hand[0]);
+            cards.push_back(players[i].hand[1]);
+            players[i].handDeg = checkHand(board);
+            if(players[i].handDeg > highest){
+                winner = {players[i].playerNum};
+            }
+            if(players[i].handDeg == highest){
+                int temp1 = stoi(highCard(players[i].hand,board,players[i].handDeg)[1]);
+                int temp2 = stoi(highCard(players[winner[0]].hand,board,highest)[1]);
+                if(temp1 > temp2){
+                    winner = {players[i].playerNum};
+                }else if(temp1 == temp2){
+                    winner.push_back(players[i].playerNum);
+                }
+            }
+        }
     }
+
+    for(int i = 0; i < winner.size(); i++){
+        players[winner[i]].winner = true;
+    }
+    return winner;
+}
+/**
+ * @brief Return highest rank card with associated degree.
+ * 
+ * Detailed description: This function will check to see which cards are used in the hands degree or deg.
+ * Then with those cards, find which card used to create that hand is largest.
+ * 
+ * @param cards The players cards used to create the hand.
+ * @param board The cards every player has access too, to create their hand.
+ * @param deg The numeral degree associated with the hand created by the players cards and board.
+ * @return Array that contains strings representative of the high card.
+ * @throws std::invalid_argument If cards is too large for a proper texas hold'em poker hand.
+ */
+std::array<string, 2> highCard(std::vector<std::array<string, 2>>& cards, std::vector<std::array<string, 2>>& board,int& deg){
+    int size = cards.size();
+    if(size == 1){
+        return cards[0];
+    }
+    if(size > 2){
+        throw std::invalid_argument("highCard: Too many player Cards");
+    }
+    std::vector<std::array<string, 2>> temp;
+    std::array<string, 2> highest;
+    //Royal Flush
+    if(deg == 9){
+        //1st card only
+        temp = board;
+        temp.push_back(cards[0]);
+        if(royalFlush(temp)){
+            highest = cards[0];
+        }
+        //2nd card only
+        temp = board;
+        temp.push_back(cards[1]);
+        if(royalFlush(temp) && stoi(cards[1][1]) > stoi(cards[0][1])){
+            highest = cards[1];
+        }
+        //both cards
+        else{
+            if(stoi(cards[0][1]) > stoi(cards[1][1])){
+                highest = cards[0];
+            }else{
+                highest = cards[1];
+            }
+        }
+
+    }
+    //Straight Flush
+    if(deg == 8){
+        //1st card only
+        temp = board;
+        temp.push_back(cards[0]);
+        if(straightFlush(temp)){
+            highest = cards[0];
+        }
+        //2nd card only
+        temp = board;
+        temp.push_back(cards[1]);
+        if(straightFlush(temp) && stoi(cards[1][1]) > stoi(cards[0][1])){
+            highest = cards[1];
+        }
+        //both cards
+        else{
+            if(stoi(cards[0][1]) > stoi(cards[1][1])){
+                highest = cards[0];
+            }else{
+                highest = cards[1];
+            }
+        }
+
+    }
+    //Four of a kind
+    if(deg == 7){
+        //1st card only
+        temp = board;
+        temp.push_back(cards[0]);
+        if(fourOAKind(temp)){
+            highest = cards[0];
+        }
+        //2nd card only
+        temp = board;
+        temp.push_back(cards[1]);
+        if(fourOAKind(temp) && stoi(cards[1][1]) > stoi(cards[0][1])){
+            highest = cards[1];
+        }
+        //both cards
+        else{
+            if(stoi(cards[0][1]) > stoi(cards[1][1])){
+                highest = cards[0];
+            }else{
+                highest = cards[1];
+            }
+        }
+
+    }
+    //Full house
+    if(deg == 6){
+        //1st card only
+        temp = board;
+        temp.push_back(cards[0]);
+        if(fullHouse(temp)){
+            highest = cards[0];
+        }
+        //2nd card only
+        temp = board;
+        temp.push_back(cards[1]);
+        if(fullHouse(temp) && stoi(cards[1][1]) > stoi(cards[0][1])){
+            highest = cards[1];
+        }
+        //both cards
+        else{
+            if(stoi(cards[0][1]) > stoi(cards[1][1])){
+                highest = cards[0];
+            }else{
+                highest = cards[1];
+            }
+        }
+
+    }
+    //Flush
+    if(deg == 5){
+        //1st card only
+        temp = board;
+        temp.push_back(cards[0]);
+        if(flush(temp)){
+            highest = cards[0];
+        }
+        //2nd card only
+        temp = board;
+        temp.push_back(cards[1]);
+        if(flush(temp) && stoi(cards[1][1]) > stoi(cards[0][1])){
+            highest = cards[1];
+        }
+        //both cards
+        else{
+            if(stoi(cards[0][1]) > stoi(cards[1][1])){
+                highest = cards[0];
+            }else{
+                highest = cards[1];
+            }
+        }
+
+    }
+    //Straight
+    if(deg == 4){
+        //1st card only
+        temp = board;
+        temp.push_back(cards[0]);
+        if(straight(temp)){
+            highest = cards[0];
+        }
+        //2nd card only
+        temp = board;
+        temp.push_back(cards[1]);
+        if(straight(temp) && stoi(cards[1][1]) > stoi(cards[0][1])){
+            highest = cards[1];
+        }
+        //both cards
+        else{
+            if(stoi(cards[0][1]) > stoi(cards[1][1])){
+                highest = cards[0];
+            }else{
+                highest = cards[1];
+            }
+        }
+
+    }
+    //Three of a kind
+    if(deg == 3){
+        //1st card only
+        temp = board;
+        temp.push_back(cards[0]);
+        if(threeOAKind(temp)){
+            highest = cards[0];
+        }
+        //2nd card only
+        temp = board;
+        temp.push_back(cards[1]);
+        if(threeOAKind(temp) && stoi(cards[1][1]) > stoi(cards[0][1])){
+            highest = cards[1];
+        }
+        //both cards
+        else{
+            if(stoi(cards[0][1]) > stoi(cards[1][1])){
+                highest = cards[0];
+            }else{
+                highest = cards[1];
+            }
+        }
+
+    }
+    //Two Pair
+    if(deg == 2){
+        //1st card only
+        temp = board;
+        temp.push_back(cards[0]);
+        if(twoPair(temp)){
+            highest = cards[0];
+        }
+        //2nd card only
+        temp = board;
+        temp.push_back(cards[1]);
+        if(twoPair(temp) && stoi(cards[1][1]) > stoi(cards[0][1])){
+            highest = cards[1];
+        }
+        //both cards
+        else{
+            if(stoi(cards[0][1]) > stoi(cards[1][1])){
+                highest = cards[0];
+            }else{
+                highest = cards[1];
+            }
+        }
+
+    }
+    //One pair
+    if(deg == 1){
+        //1st card only
+        temp = board;
+        temp.push_back(cards[0]);
+        if(onePair(temp)){
+            highest = cards[0];
+        }
+        //2nd card only
+        temp = board;
+        temp.push_back(cards[1]);
+        if(onePair(temp) && stoi(cards[1][1]) > stoi(cards[0][1])){
+            highest = cards[1];
+        }
+        //both cards
+        else{
+            if(stoi(cards[0][1]) > stoi(cards[1][1])){
+                highest = cards[0];
+            }else{
+                highest = cards[1];
+            }
+        }
+
+    }
+    //Pig
+    if(deg == 0){
+        if(stoi(cards[0][1]) > stoi(cards[1][1])){
+            highest = cards[0];
+        }else{
+            highest = cards[1];
+        }
+    }
+    return highest;
+}
+
+int findHighest(vector<std::array<string, 2>>& board, Player& players){
+    int highest = 0;
+    int temp = 0;
+
+    vector<array<string, 2>> cards;
+    cards = board;
+    //cards.push_back(players.hand[0]);
+    cards.push_back(players.hand[1]);
+    highest = checkHand(cards);
+
+    cards = board;
+    cards.push_back(players.hand[0]);
+    //cards.push_back(players.hand[1]);
+    temp = checkHand(cards);
+    if(temp > highest){
+        highest = temp;
+    }
+
+    return highest;
 }
 
 //Checks individual players hand and returns a number in accordance with that hands rank
 //The higher the rank the better
-int checkHand(Player playerH, vector<array<string, 2>> board){
-    vector<array<string, 2>> cards = board;
-    cards.push_back(playerH.hand[0]);
-    cards.push_back(playerH.hand[1]);
+int checkHand(vector<array<string, 2>> cards){
+    //vector<array<string, 2>> cards = board;
+    //cards.push_back(playerH.hand[0]);
+    //cards.push_back(playerH.hand[1]);
     
     if(royalFlush(cards)){
         return 9;
@@ -107,33 +413,38 @@ bool straightFlush(vector<array<string, 2>> cards){
     if(len <= 4 || len > 7){
         return false;
     }
-    
-	//Sorts cards in lowest to highest order
-    merge_sort(cards);
 
+    vector<array<string, 2>> cards_s;
+    vector<array<string, 2>> cards_h;
+    vector<array<string, 2>> cards_d;
+    vector<array<string, 2>> cards_c;
 
     for(int i = 0; i < len; i++){
-		//Current acts as a counter, while also acting as check for which card is needed next
-        int current = stoi(cards[i][1]) + 1;
-        //If current index makes it impossible to have a straight return false
-        if(i != len-4){
-           for(int j = i; j < len; j++){
-				//Check if card is same suit
-                if(i != j && current == stoi(cards[j][1]) && cards[i][0] == cards[j][0]){
-                    current = current + 1;
-                }
-            }
-
-            //If we have five cards of the same suit in sequence return true
-            if(stoi(cards[i][1]) + 5 == current){
-                return true;
-            }
-        }else{
-            return false;
+        if(cards[i][0] == "S"){
+            cards_s.push_back(cards[i]);
+        }
+        if(cards[i][0] == "H"){
+            cards_h.push_back(cards[i]);
+        }
+        if(cards[i][0] == "D"){
+            cards_d.push_back(cards[i]);
+        }
+        if(cards[i][0] == "C"){
+            cards_c.push_back(cards[i]);
         }
     }
 
-    return false;
+    if(straight(cards_c)){
+        return true;
+    }else if(straight(cards_d)){
+        return true;
+    }else if(straight(cards_h)){
+        return true;
+    }else if(straight(cards_s)){
+        return true;
+    }else{
+        return false;
+    }
 }
 
 bool fourOAKind(vector<array<string, 2>> cards){
@@ -264,32 +575,10 @@ bool straight(vector<array<string, 2>> cards){
         return false;
     }
 
-    int start;
-
     for(int i = 0; i < len; i++){
 
-        start = i;
-
         int current = cardsArray[i] + 1;
-        if(current == 15){
-            current = 2;
-            start = 0;
-
-        }
-        for(int j = start; j < len; j++){
-            if(i != j && current == cardsArray[j]){
-                current = current + 1;
-            }
-        }
-
-        //If we have five cards in sequence return true
-        if(cardsArray[i] + 5 == current){
-            return true;
-        }else if(current == 6 && cardsArray[i] == 14){
-            return true;
-        }
-
-        /*
+        
         if(i != len-4){
            for(int j = i; j < len; j++){
                 if(i != j && current == cardsArray[j]){
@@ -301,23 +590,23 @@ bool straight(vector<array<string, 2>> cards){
             if(cardsArray[i] + 5 == current){
                 return true;
             }
-        }else if(current == 15){
-            cout << "hi" << endl;
-            current = 1;
+        }else if(cardsArray[len-1] == 14){
+            current = 2;
             for(int j = 0; j < len; j++){
-                if(i != j && current == cardsArray[j]){
+                //Does not compare i and j because we switch to the end of the array for this edge case
+                if(current == cardsArray[j]){
                     current = current + 1;
                 }
             }
 
             //If we have five cards in sequence return true
-            if(5 == current){
+            if(6 == current){
                 return true;
             }
         }else{
             return false;
         }
-        */
+
     }
 
     return false;

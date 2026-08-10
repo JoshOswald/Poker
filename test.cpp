@@ -6,6 +6,7 @@
 #include <random>
 #include <chrono>
 #include <stdexcept>
+#include <cmath> // Required for std::floor
 
 #include "player.h"
 #include "setup.cpp"
@@ -43,12 +44,12 @@ int main() {
     //checkThreeOAKind();
     //checkFourOAKind();
     //checkFlush();
-    checkStraight();
+    //checkStraight();
     //checkFullHouse();
     //checkStraightFlush();
     //checkRoyalFlush();
 
-    //checkATonOfHands();
+    checkATonOfHands();
 
     //checkRandom();
 
@@ -431,7 +432,7 @@ bool checkStraight(){
     }
 
     //mixed
-    deck = {{"H","2"},{"H","1"},{"H","14"},{"H","4"},{"H","8"},{"H","9"},{"H","3"}};
+    deck = {{"H","2"},{"H","5"},{"H","14"},{"H","4"},{"H","8"},{"H","9"},{"H","3"}};
     if(straight(deck)){
         cout << "Ace Low: "<< GREEN << "Passed" << RESET << "\n";
     }else{
@@ -583,6 +584,20 @@ bool checkStraightFlush(){
     }else{
         cout << "Mixed: "<< RED << "Failed" << RESET << "\n";
     }
+    //ace low
+    deck = {{"H","2"},{"H","5"},{"H","7"},{"H","4"},{"H","8"},{"H","3"},{"H","14"}};
+    if(straightFlush(deck)){
+        cout << "Ace Low: "<< GREEN << "Passed" << RESET << "\n";
+    }else{
+        cout << "Ace Low: "<< RED << "Failed" << RESET << "\n";
+    }
+    //mixed
+    deck = {{"H","2"},{"H","5"},{"S","14"},{"H","4"},{"H","14"},{"H","9"},{"H","3"}};
+    if(straightFlush(deck)){
+        cout << "Ace Low: "<< GREEN << "Passed" << RESET << "\n";
+    }else{
+        cout << "Ace Low: "<< RED << "Failed" << RESET << "\n";
+    }
 
     return false;
 }
@@ -704,7 +719,12 @@ void checkATonOfHands(){
     int onePair = 0;
     int pig = 0;
 
-    int numberOfRuns = 100000;
+    int player1 = 0;
+    int player2 = 0;
+    int player3 = 0;
+    int player4 = 0;
+
+    int numberOfRuns = 10;
 
     default_random_engine eng;
     unsigned long int t = chrono::high_resolution_clock::now().time_since_epoch().count();
@@ -718,63 +738,165 @@ void checkATonOfHands(){
     // 2. Initialize the pseudo-random number generator (Twister) with the seed
     std::mt19937 g(rd());
 
+    std::vector<std::vector<std::array<std::string, 2>>> large_vector;
+    std::vector<std::vector<std::array<std::string, 2>>> larger_vector;
+
+    std::vector<int> winner;
+    int pot;
+    int rem = 0;
+
+    players = setupPlayers(playerNames);
+
     for(int i = 0; i < numberOfRuns; i++){
         temp = 0;
         deck = createDeck();
         shuffleDeck(deck, g);
-        players = setupPlayers(playerNames);
         deal(deck,players);
         board = setupBoard(deck);
-        temp = checkHand(players[0],board);
+
+        for(int j = 0; j < numPlayers; j++){
+            players[j].bet = 10;
+            players[j].chips = players[j].chips - 10;
+
+            //cout << "Player " << i << "\'s chips."<< endl;
+            //cout << players[i].chips << endl;
+        }
+
+        winner = check(board, players);
+
+        pot = 0;
+
+        rem = rem + pot % winner.size();
+
+        for(int j = 0; j < numPlayers; j++){
+            pot = pot + players[j].bet;
+            players[j].bet = 0;
+
+            switch (players[j].handDeg) {
+            case 9: royalFlush++; break;
+            case 8: straightFlush++; break;
+            case 7: fourOAKind++; break;
+            case 6: fullHouse++; break;
+            case 5: flush++; break;
+            case 4: straight++; break;
+            case 3: threeOAKind++; break;
+            case 2: twoPair++; break;
+            case 1: onePair++; break;
+            default: pig++; break;
+            }
+        }
+
+        for(int j = 0; j < winner.size(); j++){
+            if(players[winner[j]].winner){
+                players[winner[j]].chips = players[winner[j]].chips + std::floor(pot / winner.size());
+            }
+
+            cout << "\nCurrent Hand: " << i+1 << endl;
+            printPlayer(players[winner[j]]);
+
+            switch (winner[j]) {
+            case 3: player4++; break;
+            case 2: player3++; break;
+            case 1: player2++; break;
+            default: player1++; break;
+            }
+        }
+
+        //players[0].hand = {{"H","14"},{"C","14"}};
+        //board = {{"S","14"},{"D","12"},{"H","10"},{"C","12"},{"C","8"}};
+
+        //vector<array<string, 2>> cards = board;
+        //cards.push_back(players[0].hand[0]);
+        //cards.push_back(players[0].hand[1]);
+        //temp = checkHand(cards);
 
         //printCurrentHand(players,numPlayers);
         //printCurrentHand(players,1);
 
-        if(temp == 9){
-            royalFlush++;
-        }else if(temp == 8){
-            straightFlush++;
-        }else if(temp == 7){
-            fourOAKind++;
-        }else if(temp == 6){
-            fullHouse++;
-        }else if(temp == 5){
-            flush++;
-        }else if(temp == 4){
-            straight++;
-        }else if(temp == 3){
-            threeOAKind++;
-        }else if(temp == 2){
-            twoPair++;
-        }else if(temp == 1){
-            onePair++;
-        }else{
-            pig++;
+        //large_vector.push_back(players[0].hand);
+        //larger_vector.push_back(board);
+
+        /*
+        switch (temp) {
+            case 9: royalFlush++; break;
+            case 8: straightFlush++; break;
+            case 7: fourOAKind++; break;
+            case 6: fullHouse++; break;
+            case 5: flush++; break;
+            case 4: straight++; break;
+            case 3: threeOAKind++; break;
+            case 2: twoPair++; break;
+            case 1: onePair++; break;
+            default: pig++; break;
         }
+        */
 
     }
 
-    cout << "Hand Occurences in " << numberOfRuns <<":\n";
+    //Associated with checking unique hand and unique board *does not work... kind of
+    /*
+    sort(large_vector.begin(), large_vector.end());
+    large_vector.erase(std::unique(large_vector.begin(), large_vector.end()), large_vector.end());
+
+    sort(larger_vector.begin(), larger_vector.end());
+    larger_vector.erase(std::unique(larger_vector.begin(), larger_vector.end()), larger_vector.end());
+
+    cout << "Unique Hands: " << large_vector.size() << endl;
+    cout << "Unique Boards: " << larger_vector.size() << endl;
+    */
+
     cout << "Royal Flush: " << royalFlush << "\n";
-    cout << (royalFlush / numberOfRuns) * 100 << "\n\n";
+    cout << static_cast<double>(royalFlush) / numberOfRuns * 100 << "%\n\n";
+
     cout << "Straight Flush: " << straightFlush << "\n";
-    cout << (straightFlush / numberOfRuns) * 100 << "\n\n";
+    cout << static_cast<double>(straightFlush) / numberOfRuns * 100 << "%\n\n";
+
     cout << "Four of A Kind: " << fourOAKind << "\n";
-    cout << (fourOAKind / numberOfRuns) * 100 << "\n\n";
-    cout << "fullHouse: " << fullHouse << "\n";
-    cout << (fullHouse / numberOfRuns) * 100 << "\n\n";
+    cout << static_cast<double>(fourOAKind) / numberOfRuns * 100 << "%\n\n";
+
+    cout << "Full House: " << fullHouse << "\n";
+    cout << static_cast<double>(fullHouse) / numberOfRuns * 100 << "%\n\n";
+
     cout << "Flush: " << flush << "\n";
-    cout << (flush / numberOfRuns) * 100 << "\n\n";
+    cout << static_cast<double>(flush) / numberOfRuns * 100 << "%\n\n";
+
     cout << "Straight: " << straight << "\n";
-    cout << (straight / numberOfRuns) * 100 << "\n\n";
+    cout << static_cast<double>(straight) / numberOfRuns * 100 << "%\n\n";
+
     cout << "Three Of A Kind: " << threeOAKind << "\n";
-    cout << (threeOAKind / numberOfRuns) * 100 << "\n\n";
+    cout << static_cast<double>(threeOAKind) / numberOfRuns * 100 << "%\n\n";
+
     cout << "Two Pair: " << twoPair << "\n";
-    cout << (twoPair / numberOfRuns) * 100 << "\n\n";
+    cout << static_cast<double>(twoPair) / numberOfRuns * 100 << "%\n\n";
+
     cout << "One Pair: " << onePair << "\n";
-    cout << (onePair / numberOfRuns) * 100 << "\n\n";
+    cout << static_cast<double>(onePair) / numberOfRuns * 100 << "%\n\n";
+
     cout << "Pig: " << pig << "\n";
-    cout << (pig / numberOfRuns) * 100 << "\n\n";
+    cout << static_cast<double>(pig) / numberOfRuns * 100 << "%\n\n";
+
+    //Print out player results
+    cout << "\033[4mPlayer results:\033[0m" << endl;
+    cout << "Player 1: " << endl;
+    cout << "Hands won: " << player1 << endl;
+    cout << "Chips: " << players[0].chips << endl;
+
+    cout << "Player 2: " << endl;
+    cout << "Hands won: " << player2 << endl;
+    cout << "Chips: " << players[1].chips << endl;
+
+    cout << "Player 3: " << endl;
+    cout << "Hands won: " << player3 << endl;
+    cout << "Chips: " << players[2].chips << endl;
+
+    cout << "Player 4: " << endl;
+    cout << "Hands won: " << player4 << endl;
+    cout << "Chips: " << players[3].chips << endl;
+
+    //Print out remainder chips
+    cout << "\n\033[4mRemaining chips:\033[0m" << endl;
+    cout << rem << endl;
+
 }
 
 void checkRandom(){

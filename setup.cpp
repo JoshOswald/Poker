@@ -18,6 +18,7 @@ void shuffleDeck(vector<array<string, 2>>& deck, std::mt19937& seed);
 void intro();
 void deal(vector<array<string, 2>> deck, vector<Player>& players);
 void printCurrentHand(vector<Player> players, int numPlayers);
+void printPlayer(Player players);
 vector<array<string, 2>> setupBoard(vector<array<string, 2>> deck);
 
 //Creates deck of 52 cards, ranked from 2 to 14
@@ -77,6 +78,7 @@ void deal(vector<array<string, 2>> deck, vector<Player>& players){
         for(int j = 0; j < numPlayers; j++){
             if(i == 0){
                 players[j].hand.clear();
+                players[j].fold = false;
             }
 
             players[j].hand.push_back(deck[0]);
@@ -136,4 +138,15 @@ void intro(){
 
     if(cleanString == "yes"){}
     if(cleanString == "no"){}
+}
+
+void printPlayer(Player players){
+    cout << "\033[4mPlayer " << players.playerNum << "results:\033[0m" << endl;
+    cout << "Chips: " << players.chips << endl;
+    cout << "Bet" << players.bet << endl;
+    cout << "Hand degree: " << players.handDeg << endl;
+    if(players.hand.size() > 0){
+        cout << players.hand[0][0] << players.hand[0][1] << endl;
+        cout << players.hand[1][0] << players.hand[1][1] << endl;
+    }
 }
